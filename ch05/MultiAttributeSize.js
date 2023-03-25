@@ -1,42 +1,40 @@
-// MultiAttributeSize.js (c) 2012 matsuda
 // Vertex shader program
-var VSHADER_SOURCE =
-  'attribute vec4 a_Position;\n' +
-  'attribute float a_PointSize;\n' +
-  'void main() {\n' +
-  '  gl_Position = a_Position;\n' +
-  '  gl_PointSize = a_PointSize;\n' +
-  '}\n';
+const VSHADER_SOURCE =`
+  attribute vec4 a_Position;
+  attribute float a_PointSize;
+  void main() {
+    gl_Position = a_Position;
+    gl_PointSize = a_PointSize;
+  }`;
 
 // Fragment shader program
-var FSHADER_SOURCE =
-  'void main() {\n' +
-  '  gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);\n' +
-  '}\n';
+const FSHADER_SOURCE =`
+  void main() {
+    gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+  }`;
 
 function main() {
   // Retrieve <canvas> element
-  var canvas = document.getElementById('webgl');
+  const canvas = document.getElementById('webgl');
 
   // Get the rendering context for WebGL
-  var gl = getWebGLContext(canvas);
-  if (!gl) {
-    console.log('Failed to get the rendering context for WebGL');
-    return;
-  }
+  const gl = canvas.getContext('webgl');
 
   // Initialize shaders
-  if (!initShaders(gl, VSHADER_SOURCE, FSHADER_SOURCE)) {
-    console.log('Failed to intialize shaders.');
-    return;
-  }
+  const vshader = gl.createShader(gl.VERTEX_SHADER);
+  const fshader = gl.createShader(gl.FRAGMENT_SHADER);
+  gl.shaderSource(vshader, VSHADER_SOURCE);
+  gl.shaderSource(fshader, FSHADER_SOURCE);
+  gl.compileShader(vshader);
+  gl.compileShader(fshader);
+  gl.program = gl.createProgram();
+  gl.attachShader(gl.program, vshader);
+  gl.attachShader(gl.program, fshader);
+  gl.linkProgram(gl.program);
+  gl.useProgram(gl.program);  
 
   // Set the vertex information
-  var n = initVertexBuffers(gl);
-  if (n < 0) {
-    console.log('Failed to set the positions of the vertices');
-    return;
-  }
+  const n = initVertexBuffers(gl);
 
   // Specify the color for clearing <canvas>
   gl.clearColor(0.0, 0.0, 0.0, 1.0);
@@ -49,42 +47,24 @@ function main() {
 }
 
 function initVertexBuffers(gl) {
-  var vertices = new Float32Array([
-    0.0, 0.5,   -0.5, -0.5,   0.5, -0.5
+  const verticesSizes = new Float32Array([
+    0.0, 0.5, 10, 
+    - 0.5, - 0.5, 20,
+    0.5, -0.5, 30,
   ]);
-  var n = 3;
-
-  var sizes = new Float32Array([
-    10.0, 20.0, 30.0  // Point sizes
-  ]);
-
+  const n = 3;
+  
+  const FSIZE = verticesSizes.BYTES_PER_ELEMENT;
   // Create a buffer object
-  var vertexBuffer = gl.createBuffer();  
-  var sizeBuffer = gl.createBuffer();
-  if (!vertexBuffer || !sizeBuffer) {
-    console.log('Failed to create the buffer object');
-    return -1;
-  }
+  const verticesSizesBuffer = gl.createBuffer();  
   // Write vertex coordinates to the buffer object and enable it
-  gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-  gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
-  var a_Position = gl.getAttribLocation(gl.program, 'a_Position');
-    if(a_Position < 0) {
-    console.log('Failed to get the storage location of a_Position');
-    return -1;
-  }
-  gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0, 0);
+  gl.bindBuffer(gl.ARRAY_BUFFER, verticesSizesBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, verticesSizes, gl.STATIC_DRAW);
+  const a_Position = gl.getAttribLocation(gl.program, 'a_Position');
+  gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, FSIZE * 3, 0);
   gl.enableVertexAttribArray(a_Position);
-
-  // Bind the point size buffer object to target
-  gl.bindBuffer(gl.ARRAY_BUFFER, sizeBuffer);
-  gl.bufferData(gl.ARRAY_BUFFER, sizes, gl.STATIC_DRAW);
-  var a_PointSize = gl.getAttribLocation(gl.program, 'a_PointSize');
-  if(a_PointSize < 0) {
-    console.log('Failed to get the storage location of a_PointSize');
-    return -1;
-  }
-  gl.vertexAttribPointer(a_PointSize, 1, gl.FLOAT, false, 0, 0);
+  const a_PointSize = gl.getAttribLocation(gl.program, 'a_PointSize');
+  gl.vertexAttribPointer(a_PointSize, 1, gl.FLOAT, false, FSIZE * 3, FSIZE * 2);
   gl.enableVertexAttribArray(a_PointSize);
 
   // Unbind the buffer object
