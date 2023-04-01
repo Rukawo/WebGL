@@ -100,22 +100,12 @@ function initVertexBuffers(gl) {
 
 function initTextures(gl, n) {
   var texture = gl.createTexture();   // Create a texture object
-  if (!texture) {
-    console.log('Failed to create the texture object');
-    return false;
-  }
 
   // Get the storage location of u_Sampler
   var u_Sampler = gl.getUniformLocation(gl.program, 'u_Sampler');
-  if (!u_Sampler) {
-    console.log('Failed to get the storage location of u_Sampler');
-    return false;
-  }
+
   var image = new Image();  // Create the image object
-  if (!image) {
-    console.log('Failed to create the image object');
-    return false;
-  }
+
   // Register the event handler to be called on loading an image
   image.onload = function(){ loadTexture(gl, n, texture, u_Sampler, image); };
   // Tell the browser to load an image
